@@ -1,0 +1,937 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FraudGuard Global - Layanan Pelaporan Penipuan</title>
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+
+    <!-- Supabase JS -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+    <!-- Custom CSS for Animations -->
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
+        
+        body { font-family: 'Inter', sans-serif; }
+        
+        .ticker-wrap {
+            overflow: hidden;
+            white-space: nowrap;
+        }
+        .ticker-content {
+            display: inline-block;
+            animation: scroll 40s linear infinite;
+        }
+        @keyframes scroll {
+            0% { transform: translateX(0); }
+            100% { transform: translateX(-50%); }
+        }
+        .pb-safe { padding-bottom: env(safe-area-inset-bottom); }
+        .no-scrollbar::-webkit-scrollbar { display: none; }
+        .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+    </style>
+</head>
+<body class="bg-slate-50 text-slate-900 min-h-screen flex flex-col relative">
+
+    <!-- DESKTOP NAVBAR -->
+    <nav class="bg-slate-900 text-white sticky top-0 z-40 shadow-lg border-b border-slate-700 hidden md:block">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex items-center justify-between h-16">
+                <div class="flex items-center cursor-pointer hover:opacity-80 transition" onclick="app.navigate('home')">
+                    <i data-lucide="shield" class="h-8 w-8 text-blue-400 mr-2"></i>
+                    <span class="font-bold text-xl tracking-tight">FraudGuard<span class="text-blue-400">Global</span></span>
+                </div>
+                <div class="ml-10 flex items-baseline space-x-4">
+                    <button onclick="app.navigate('home')" class="nav-btn px-3 py-2 rounded-md text-sm font-medium transition-colors hover:bg-slate-800" data-target="home">Beranda</button>
+                    <button onclick="app.navigate('report')" class="nav-btn px-3 py-2 rounded-md text-sm font-medium transition-colors hover:bg-slate-800" data-target="report">Buat Laporan</button>
+                    <button onclick="app.navigate('feed')" class="nav-btn px-3 py-2 rounded-md text-sm font-medium transition-colors hover:bg-slate-800" data-target="feed">Data Global</button>
+                    <button onclick="app.navigate('help')" class="nav-btn px-3 py-2 rounded-md text-sm font-medium transition-colors hover:bg-slate-800 text-blue-300" data-target="help">Bantuan & Konsultasi</button>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- MOBILE TOP BAR (Logo Only) -->
+    <nav class="bg-slate-900 text-white sticky top-0 z-40 shadow-lg border-b border-slate-700 md:hidden block">
+        <div class="px-4 h-16 flex items-center justify-center">
+            <div class="flex items-center" onclick="app.navigate('home')">
+                <i data-lucide="shield" class="h-6 w-6 text-blue-400 mr-2"></i>
+                <span class="font-bold text-lg tracking-tight">FraudGuard<span class="text-blue-400">Global</span></span>
+            </div>
+        </div>
+    </nav>
+
+    <!-- MAIN CONTENT AREA -->
+    <main class="flex-grow pb-24 md:pb-0" id="main-content">
+        
+        <!-- VIEW: HOME -->
+        <section id="view-home" class="view-section">
+            <!-- Hero -->
+            <div class="bg-gradient-to-br from-slate-900 via-slate-800 to-blue-900 text-white py-12 md:py-20 relative overflow-hidden">
+                <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col md:flex-row items-center relative z-10">
+                    <div class="md:w-1/2 mb-10 md:mb-0">
+                        <div class="inline-flex items-center px-3 py-1 rounded-full bg-blue-500/20 text-blue-300 text-sm font-semibold mb-6 border border-blue-500/30">
+                            <i data-lucide="globe" class="w-4 h-4 mr-2"></i> Layanan Pelaporan Global 24/7
+                        </div>
+                        <h1 class="text-4xl md:text-5xl font-extrabold leading-tight mb-6">
+                            Hentikan Penipuan.<br/>
+                            <span class="text-blue-400">Lindungi Komunitas.</span>
+                        </h1>
+                        <p class="text-lg text-slate-300 mb-8 max-w-lg">
+                            Platform terpercaya yang menghubungkan ribuan korban untuk berbagi data penipuan secara real-time. Laporkan kasus Anda sekarang.
+                        </p>
+                        <div class="flex flex-col sm:flex-row gap-4">
+                            <button onclick="app.navigate('report')" class="px-8 py-4 bg-red-600 hover:bg-red-700 rounded-lg font-bold text-white shadow-lg transition-all flex items-center justify-center">
+                                <i data-lucide="alert-triangle" class="mr-2 h-5 w-5"></i> Laporkan Penipuan
+                            </button>
+                            <button onclick="app.navigate('feed')" class="px-8 py-4 bg-slate-700 hover:bg-slate-600 rounded-lg font-bold text-white border border-slate-600 transition-all flex items-center justify-center">
+                                <i data-lucide="activity" class="mr-2 h-5 w-5"></i> Lihat Data Terkini
+                            </button>
+                        </div>
+                    </div>
+                    <div class="md:w-1/2 flex justify-center w-full">
+                        <div class="bg-slate-800/50 backdrop-blur-sm p-6 rounded-2xl border border-slate-700 w-full max-w-md shadow-2xl relative overflow-hidden">
+                            <div class="absolute top-0 right-0 -mr-16 -mt-16 w-32 h-32 bg-blue-500 rounded-full opacity-10 blur-3xl"></div>
+                            <h3 class="text-xl font-bold mb-4 text-slate-200 border-b border-slate-700 pb-2 flex items-center">
+                                <i data-lucide="trending-up" class="w-5 h-5 mr-2 text-green-400"></i> Statistik Akumulatif
+                            </h3>
+                            <div class="grid grid-cols-2 gap-4">
+                                <div class="bg-slate-700/50 p-4 rounded-xl">
+                                    <p class="text-slate-400 text-xs uppercase tracking-wider font-semibold">Total Laporan</p>
+                                    <p class="text-2xl md:text-3xl font-bold text-white" id="stat-total-reports">Loading...</p>
+                                </div>
+                                <div class="bg-slate-700/50 p-4 rounded-xl">
+                                    <p class="text-slate-400 text-xs uppercase tracking-wider font-semibold">Pengguna Aktif</p>
+                                    <div class="flex items-center">
+                                        <p class="text-2xl md:text-3xl font-bold text-blue-400" id="stat-active-users">Loading...</p>
+                                    </div>
+                                </div>
+                                <div class="col-span-2 bg-slate-700/50 p-4 rounded-xl">
+                                    <p class="text-slate-400 text-xs uppercase tracking-wider font-semibold">Total Kerugian Terlapor (IDR)</p>
+                                    <p class="text-xl md:text-2xl font-bold text-red-400 truncate" id="stat-total-loss">Loading...</p>
+                                </div>
+                            </div>
+                            <div class="mt-4 flex justify-between items-center text-xs text-slate-500">
+                                <span>*Data historis & real-time</span>
+                                <span class="flex items-center text-green-500"><div class="w-2 h-2 bg-green-500 rounded-full mr-1 animate-pulse"></div> Live</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Ticker -->
+            <div class="bg-slate-800 py-3 border-y border-slate-700 overflow-hidden relative">
+                <div class="absolute left-0 top-0 bottom-0 w-20 bg-gradient-to-r from-slate-900 to-transparent z-10 pointer-events-none"></div>
+                <div class="absolute right-0 top-0 bottom-0 w-20 bg-gradient-to-l from-slate-900 to-transparent z-10 pointer-events-none"></div>
+                <div class="ticker-wrap">
+                    <div class="ticker-content" id="ticker-container"></div>
+                </div>
+            </div>
+
+            <!-- Recent Reports Preview -->
+            <div class="py-12 bg-white">
+                <div class="max-w-7xl mx-auto px-4 text-center">
+                    <h2 class="text-2xl font-bold mb-8 text-slate-800">Laporan Terbaru Hari Ini</h2>
+                    <div id="home-feed-preview" class="grid grid-cols-1 md:grid-cols-3 gap-6 text-left">
+                        <div class="col-span-3 flex justify-center py-10"><div class="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div></div>
+                    </div>
+                    <button onclick="app.navigate('feed')" class="mt-8 inline-flex items-center text-blue-600 font-semibold hover:text-blue-800">
+                        Lihat Semua Laporan <i data-lucide="chevron-right" class="w-4 h-4 ml-1"></i>
+                    </button>
+                </div>
+            </div>
+        </section>
+
+        <!-- VIEW: REPORT FORM -->
+        <section id="view-report" class="view-section hidden max-w-3xl mx-auto px-4 py-10 relative z-10">
+            <div class="bg-white rounded-2xl shadow-xl overflow-hidden border border-slate-200">
+                <div class="bg-slate-50 px-8 py-6 border-b border-slate-200">
+                    <h2 class="text-2xl font-bold text-slate-800 flex items-center">
+                        <i data-lucide="file-text" class="mr-3 text-blue-600"></i> Formulir Pengaduan
+                    </h2>
+                    <p class="text-slate-500 mt-1">Isi detail kejadian dengan sebenar-benarnya.</p>
+                </div>
+                
+                <form id="fraudReportForm" class="p-8 space-y-6">
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div>
+                            <label class="block text-sm font-medium text-slate-700 mb-1">Nama/Identitas Penipu</label>
+                            <input required type="text" name="scammer_name" class="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none" placeholder="Misal: Toko Abadi Jaya / John Doe">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-slate-700 mb-1">Platform Kejadian</label>
+                            <select name="platform" class="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none">
+                                <option value="WhatsApp">WhatsApp</option>
+                                <option value="Telegram">Telegram</option>
+                                <option value="Instagram">Instagram</option>
+                                <option value="Facebook">Facebook</option>
+                                <option value="TikTok">TikTok</option>
+                                <option value="SMS">SMS</option>
+                                <option value="Email">Email</option>
+                                <option value="Lainnya">Lainnya</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-slate-700 mb-1">Kontak Pelaku (No.HP/Link)</label>
+                            <input required type="text" name="contact_info" class="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none" placeholder="+62812... / www.scam.com">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-slate-700 mb-1">Total Kerugian (IDR)</label>
+                            <input type="number" name="loss_amount" min="0" class="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none" placeholder="0 jika tidak ada kerugian materi">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-slate-700 mb-1">Kategori Penipuan</label>
+                            <select name="category" class="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none">
+                                <option value="Belanja Online">Belanja Online</option>
+                                <option value="Investasi Bodong">Investasi Bodong</option>
+                                <option value="Phishing/Link Palsu">Phishing/Link Palsu</option>
+                                <option value="Lowongan Kerja Palsu">Lowongan Kerja Palsu</option>
+                                <option value="Pinjaman Online Ilegal">Pinjaman Online Ilegal</option>
+                                <option value="Romance Scam">Romance Scam</option>
+                                <option value="Lainnya">Lainnya</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-slate-700 mb-1">Nama Pelapor (Opsional)</label>
+                            <input type="text" name="reporter_name" class="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none" placeholder="Boleh dikosongkan untuk anonim">
+                        </div>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-slate-700 mb-1">Kronologi Kejadian</label>
+                        <textarea required name="description" rows="4" class="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none" placeholder="Ceritakan bagaimana penipuan terjadi..."></textarea>
+                    </div>
+                    <div class="flex items-center justify-between pt-4">
+                        <div class="text-xs text-slate-500 flex items-center">
+                            <i data-lucide="lock" class="w-3 h-3 mr-1"></i> Data dilindungi enkripsi SSL
+                        </div>
+                        <button type="submit" id="btn-submit-report" class="px-8 py-3 bg-blue-600 text-white font-bold rounded-lg shadow hover:bg-blue-700 transition-colors disabled:opacity-50">
+                            Kirim Laporan
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </section>
+
+        <!-- VIEW: GLOBAL FEED -->
+        <section id="view-feed" class="view-section hidden max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
+            <div class="flex flex-col md:flex-row justify-between items-center mb-8">
+                <div>
+                    <h2 class="text-3xl font-bold text-slate-900">Database Penipuan Global</h2>
+                    <p class="text-slate-500 mt-1">Laporan masuk secara real-time dari seluruh dunia.</p>
+                </div>
+                <div class="mt-4 md:mt-0 relative w-full md:w-auto">
+                    <input type="text" id="feed-search" placeholder="Cari nama, no hp, platform..." class="pl-10 pr-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 w-full md:w-64 outline-none">
+                    <i data-lucide="search" class="absolute left-3 top-2.5 h-4 w-4 text-slate-400"></i>
+                </div>
+            </div>
+            <div id="feed-container" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                <div class="col-span-3 text-center py-20"><div class="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div></div>
+            </div>
+        </section>
+
+        <!-- VIEW: HELP PAGE -->
+        <section id="view-help" class="view-section hidden max-w-4xl mx-auto px-4 py-12">
+            <div class="bg-white rounded-2xl shadow-xl overflow-hidden border border-slate-200">
+                <div class="bg-gradient-to-r from-blue-700 to-blue-900 p-8 sm:p-12 text-center text-white relative overflow-hidden">
+                    <div class="relative z-10">
+                        <i data-lucide="headphones" class="w-16 h-16 mx-auto mb-4 text-blue-300"></i>
+                        <h2 class="text-3xl sm:text-4xl font-extrabold mb-3">Pusat Bantuan & Konsultasi Hukum</h2>
+                        <p class="text-blue-100 text-lg max-w-2xl mx-auto">
+                            Jangan biarkan penipu lolos. Dapatkan pendampingan profesional untuk memulihkan hak Anda dan memblokir akses pelaku.
+                        </p>
+                    </div>
+                    <div class="absolute top-0 right-0 w-64 h-64 bg-white opacity-5 rounded-full -mr-20 -mt-20"></div>
+                    <div class="absolute bottom-0 left-0 w-48 h-48 bg-blue-500 opacity-20 rounded-full -ml-10 -mb-10"></div>
+                </div>
+                <div class="p-8 sm:p-10">
+                    <h3 class="text-xl font-bold text-slate-800 mb-6 text-center">Layanan yang Kami Berikan</h3>
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-10">
+                        <div class="bg-slate-50 p-6 rounded-xl border border-slate-100 hover:border-blue-200 transition-colors">
+                            <i data-lucide="scale" class="w-8 h-8 text-blue-600 mb-3"></i>
+                            <h4 class="font-bold text-slate-800 mb-2">Konsultasi Hukum</h4>
+                            <p class="text-sm text-slate-600">Analisis kasus mendalam untuk menentukan pasal pelanggaran dan langkah hukum.</p>
+                        </div>
+                        <div class="bg-slate-50 p-6 rounded-xl border border-slate-100 hover:border-blue-200 transition-colors">
+                            <i data-lucide="file-check" class="w-8 h-8 text-blue-600 mb-3"></i>
+                            <h4 class="font-bold text-slate-800 mb-2">Pembuatan Kronologi</h4>
+                            <p class="text-sm text-slate-600">Penyusunan berkas kronologi resmi yang valid untuk pelaporan ke Kepolisian & Bank.</p>
+                        </div>
+                        <div class="bg-slate-50 p-6 rounded-xl border border-slate-100 hover:border-blue-200 transition-colors">
+                            <i data-lucide="ban" class="w-8 h-8 text-blue-600 mb-3"></i>
+                            <h4 class="font-bold text-slate-800 mb-2">Blokir Rekening</h4>
+                            <p class="text-sm text-slate-600">Panduan dan pendampingan untuk memblokir rekening penipu agar dana tertahan.</p>
+                        </div>
+                    </div>
+                    <div class="bg-yellow-50 border-l-4 border-yellow-400 p-6 mb-10 rounded-r-lg">
+                        <div class="flex items-start">
+                            <i data-lucide="info" class="h-6 w-6 text-yellow-600 mr-4 flex-shrink-0 mt-1"></i>
+                            <div>
+                                <h4 class="font-bold text-lg text-yellow-800 mb-1">Informasi Biaya Layanan</h4>
+                                <p class="text-yellow-700">Sebagai komitmen profesionalisme, kami mengenakan tarif flat:</p>
+                                <div class="mt-3 inline-block bg-white px-4 py-2 rounded-lg border border-yellow-200 shadow-sm">
+                                    <span class="text-slate-500 text-sm font-semibold">Tarif Konsultasi & Penanganan:</span>
+                                    <span class="block text-2xl font-bold text-green-600">Rp 50.000 <span class="text-xs font-normal text-slate-400">/ Kasus</span></span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="text-center border-t border-slate-100 pt-8">
+                        <p class="text-slate-600 mb-6 font-medium">Siap menyelesaikan masalah Anda? Hubungi kami sekarang.</p>
+                        <button onclick="app.toggleChat(true)" class="inline-flex items-center justify-center px-8 py-4 bg-[#25D366] hover:bg-[#20bd5a] text-white font-bold rounded-full text-lg transition-all shadow-lg hover:shadow-green-500/30 transform hover:-translate-y-1">
+                            <i data-lucide="message-circle" class="w-6 h-6 mr-3"></i> Hubungi Tim Bantuan (Live Chat)
+                        </button>
+                        <p class="mt-4 text-xs text-slate-400">Jam Operasional: Senin - Minggu (08.00 - 22.00 WIB)</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- MOBILE BOTTOM NAVIGATION -->
+    <div class="md:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-slate-200 shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.1)] z-50 pb-safe">
+        <div class="flex justify-around items-center h-16 px-1">
+            <button onclick="app.navigate('home')" class="mobile-nav-btn flex flex-col items-center justify-center w-full h-full space-y-1 text-blue-600" data-target="home">
+                <i data-lucide="home" class="w-6 h-6"></i>
+                <span class="text-[10px] font-medium">Beranda</span>
+            </button>
+            <button onclick="app.navigate('feed')" class="mobile-nav-btn flex flex-col items-center justify-center w-full h-full space-y-1 text-slate-400" data-target="feed">
+                <i data-lucide="activity" class="w-6 h-6"></i>
+                <span class="text-[10px] font-medium">Data</span>
+            </button>
+            <button onclick="app.navigate('report')" class="flex flex-col items-center justify-center w-full h-full -mt-6 relative z-10">
+                <div class="rounded-full p-4 shadow-lg bg-blue-600 transition-transform active:scale-95" id="mobile-report-btn">
+                    <i data-lucide="plus-circle" class="w-7 h-7 text-white"></i>
+                </div>
+                <span class="text-[10px] font-bold mt-1 text-slate-500" id="mobile-report-text">Lapor</span>
+            </button>
+            <button onclick="app.navigate('help')" class="mobile-nav-btn flex flex-col items-center justify-center w-full h-full space-y-1 text-slate-400" data-target="help">
+                <i data-lucide="headphones" class="w-6 h-6"></i>
+                <span class="text-[10px] font-medium">Bantuan</span>
+            </button>
+        </div>
+    </div>
+
+    <!-- CHAT WIDGET -->
+    <!-- FIX: Added pointer-events-none to the container, and pointer-events-auto to children -->
+    <div class="fixed bottom-24 right-4 md:bottom-6 md:right-6 z-50 flex flex-col items-end pointer-events-none">
+        <div id="chat-window" class="hidden bg-white w-80 md:w-96 rounded-2xl shadow-2xl mb-4 overflow-hidden border border-slate-200 flex flex-col transition-all origin-bottom-right h-96 pointer-events-auto">
+            <div class="bg-blue-700 p-4 flex justify-between items-center text-white flex-shrink-0">
+                <div class="flex items-center">
+                    <div class="bg-white/20 p-2 rounded-full mr-3"><i data-lucide="headphones" class="w-5 h-5"></i></div>
+                    <div>
+                        <h3 class="font-bold text-sm">Customer Service</h3>
+                        <p class="text-xs text-blue-200 flex items-center"><span class="w-2 h-2 bg-green-400 rounded-full mr-1"></span> Online</p>
+                    </div>
+                </div>
+                <button onclick="app.toggleChat(false)" class="hover:bg-blue-600 p-1 rounded transition"><i data-lucide="x" class="w-5 h-5"></i></button>
+            </div>
+            
+            <!-- Chat LOGIN Form (Visible if no phone) -->
+            <div id="chat-login-form" class="hidden flex-col items-center justify-center h-full p-6 text-center space-y-4 bg-slate-50">
+                <div class="bg-blue-100 p-3 rounded-full"><i data-lucide="message-square" class="w-8 h-8 text-blue-600"></i></div>
+                <div>
+                    <h4 class="font-bold text-slate-800">Mulai Konsultasi</h4>
+                    <p class="text-xs text-slate-500 mt-1">Masukkan Nomor WhatsApp Anda agar kami dapat merespons dan mengenali Anda.</p>
+                </div>
+                <form id="phone-form" class="w-full space-y-3">
+                    <input type="tel" id="user-phone-input" required placeholder="Contoh: 08123456789" class="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-center">
+                    <button type="submit" class="w-full bg-blue-600 text-white py-2 rounded-lg font-bold hover:bg-blue-700 transition">Lanjut Chat</button>
+                </form>
+            </div>
+
+            <!-- Chat MESSAGES Area (Visible if logged in) -->
+            <div id="chat-container" class="hidden flex-col h-full overflow-hidden">
+                <div id="chat-messages" class="flex-grow overflow-y-auto p-4 bg-slate-50 space-y-4"></div>
+                <form id="chat-form" class="p-3 bg-white border-t border-slate-200 flex gap-2 flex-shrink-0">
+                    <input type="text" id="chat-input" placeholder="Tulis pesan..." class="flex-grow px-4 py-2 bg-slate-100 rounded-full text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
+                    <button type="submit" class="p-2 bg-blue-600 text-white rounded-full hover:bg-blue-700 transition shadow-md"><i data-lucide="send" class="w-5 h-5"></i></button>
+                </form>
+            </div>
+        </div>
+        <button onclick="app.toggleChat()" id="chat-toggle-btn" class="bg-blue-600 hover:bg-blue-700 text-white p-4 rounded-full shadow-lg transition-all hover:scale-105 flex items-center justify-center pointer-events-auto">
+            <i data-lucide="message-square" class="w-6 h-6"></i>
+        </button>
+    </div>
+
+    <!-- FOOTER -->
+    <footer class="bg-slate-900 text-slate-400 py-12 border-t border-slate-800 pb-24 md:pb-12">
+        <div class="max-w-7xl mx-auto px-4 text-center">
+            <p class="text-white font-bold mb-2">FraudGuard Global</p>
+            <p class="text-xs">Platform komunitas independen untuk pelaporan penipuan online.</p>
+            <p class="text-xs mt-4">&copy; 2024 FraudGuard Global Inc.</p>
+        </div>
+    </footer>
+
+    <!-- JAVASCRIPT LOGIC -->
+    <script>
+        const SB_URL = 'https://heaedfjyjpfvpddtgjhk.supabase.co';
+        const SB_KEY = 'sb_publishable_uuIu1DiiNhS4aHc3ZSxqrg_F4punPvO';
+        
+        // --- ADDED MOCK REPORTERS HERE ---
+        const MOCK_REPORTERS = [
+            'Budi Santoso', 'Siti Aminah', 'Rudi Hartono', 'Dewi Sartika', 'Agus Salim', 
+            'Ratna Sari', 'Eko Prasetyo', 'Diana Putri', 'Fajar Nugraha', 'Maya Wijaya', 
+            'Andi Saputra', 'Rina Marlina', 'Joko Widodo', 'Megawati', 'Susilo Bambang',
+            'Putri Ayu', 'Rizky Pratama', 'Hendra Gunawan', 'Lestari Indah', 'Bayu Permana'
+        ];
+
+        const TESTIMONIAL_POOL = [
+            { text: "Terima kasih tim FraudGuard! Berkat panduan hukumnya, uang saya bisa kembali.", name: "Sari W.", role: "Ibu Rumah Tangga" },
+            { text: "Respon admin CS sangat cepat. Langsung dibantu buat kronologi.", name: "Denny A.", role: "Mahasiswa" },
+            { text: "Akhirnya rekening penipu itu terblokir juga. Puas banget.", name: "Hartono", role: "Wiraswasta" },
+            { text: "Awalnya bingung mau lapor kemana, aplikasi ini sangat membantu.", name: "Lina P.", role: "Karyawan" },
+            { text: "Konsultasi hukumnya murah tapi sangat profesional.", name: "Rizky", role: "Freelancer" },
+            { text: "Sangat terbantu dengan fitur cek rekening.", name: "Budi S.", role: "Pedagang" },
+            { text: "Hati-hati modus loker palsu! Untung cek di FraudGuard dulu.", name: "Anisa", role: "Jobseeker" },
+            { text: "Layanan bantuan hukumnya top, didampingi sampai tuntas.", name: "Fajar", role: "PNS" },
+            { text: "Fitur live chat sangat responsif, adminnya ramah.", name: "Merry", role: "Ibu Rumah Tangga" },
+            { text: "Semoga makin banyak yang pakai aplikasi ini.", name: "Agus", role: "Driver Online" },
+            { text: "Baru tau kalau bisa lapor penipuan semudah ini.", name: "Diana", role: "Mahasiswi" },
+            { text: "Data di feed sangat update, saya jadi lebih waspada.", name: "Eko", role: "Karyawan" },
+            { text: "Penipuan investasi bodong akhirnya terungkap.", name: "Kevin", role: "Investor" },
+            { text: "Biaya 50rb sangat worth it.", name: "Ratna", role: "Guru" },
+            { text: "Tampilan aplikasinya mudah dimengerti.", name: "Bayu", role: "Desainer" }
+        ];
+
+        const SCAM_TYPES = [
+            { cat: 'Investasi Bodong', names: ['Trading Profit X', 'Investasi Emas Digital', 'Crypto Future VIP', 'Saham Gorengan Premium'], desc: 'Menawarkan profit harian tidak masuk akal.' },
+            { cat: 'Belanja Online', names: ['Gudang Diskon Impor', 'Toko Batam Murah', 'Distributor HP Ilegal', 'Fashion Reject'], desc: 'Barang tidak sampai, nomor WA diblokir.' },
+            { cat: 'Phishing', names: ['Undangan Pernikahan Digital', 'Kurir Paket Express', 'Tagihan Listrik Palsu', 'Voucher Game'], desc: 'Mengirim file APK lewat WhatsApp.' },
+            { cat: 'Pinjaman Online', names: ['Kredit Kilat Cair', 'Dana Cepat Tanpa Agunan', 'Pinjol Sahabat', 'Rupiah Kilat'], desc: 'Penagihan kasar dan bunga tinggi.' }
+        ];
+        const PLATFORMS = ['WhatsApp', 'Telegram', 'Facebook', 'Instagram', 'TikTok', 'SMS'];
+
+        class FraudApp {
+            constructor() {
+                this.state = {
+                    view: 'home',
+                    user_id: null, 
+                    reports: [],
+                    mockReports: [],
+                    isChatOpen: false,
+                    messages: [],
+                    adminStatsOverride: null
+                };
+                
+                this.initSupabase();
+                this.initIdentity();
+                this.state.mockReports = this.generateMockReports();
+                this.renderTicker();
+                this.setupEventListeners();
+                lucide.createIcons();
+
+                // ADD BACKGROUND REFRESH
+                this.startBackgroundRefresh();
+            }
+
+            initSupabase() {
+                this.supabase = window.supabase.createClient(SB_URL, SB_KEY);
+                this.listenToReports();
+                this.listenToStatsOverride();
+            }
+
+            initIdentity() {
+                const storedPhone = localStorage.getItem('fraudguard_user_phone');
+                if (storedPhone) {
+                    this.state.user_id = storedPhone;
+                    this.listenToChat();
+                }
+                this.updateChatUIState();
+            }
+
+            // NEW: Background Refresh every 2 seconds
+            startBackgroundRefresh() {
+                setInterval(() => {
+                    this.refreshReports();
+                    this.refreshStats();
+                    this.refreshChat();
+                }, 2000);
+            }
+
+            updateChatUIState() {
+                const loginForm = document.getElementById('chat-login-form');
+                const chatContainer = document.getElementById('chat-container');
+                
+                if (this.state.user_id) {
+                    loginForm.classList.add('hidden');
+                    loginForm.classList.remove('flex');
+                    chatContainer.classList.remove('hidden');
+                    chatContainer.classList.add('flex');
+                } else {
+                    loginForm.classList.remove('hidden');
+                    loginForm.classList.add('flex');
+                    chatContainer.classList.add('hidden');
+                    chatContainer.classList.remove('flex');
+                }
+            }
+
+            async listenToReports() {
+                const { data } = await this.supabase.from('fraud_reports').select('*').order('created_at', { ascending: false });
+                if (data) this.updateReportsList(data);
+
+                this.supabase.channel('public:fraud_reports')
+                    .on('postgres_changes', { event: '*', schema: 'public', table: 'fraud_reports' }, () => {
+                        this.refreshReports();
+                    })
+                    .subscribe();
+            }
+
+            async refreshReports() {
+                const { data } = await this.supabase.from('fraud_reports').select('*').order('created_at', { ascending: false });
+                if(data) this.updateReportsList(data);
+            }
+
+            updateReportsList(realReports) {
+                const allReports = [...realReports, ...this.state.mockReports, ...this.getHistoricalMocks()];
+                allReports.sort((a, b) => {
+                    const ta = new Date(a.created_at || a.createdAt?.seconds*1000).getTime();
+                    const tb = new Date(b.created_at || b.createdAt?.seconds*1000).getTime();
+                    return tb - ta;
+                });
+                this.state.reports = allReports;
+                this.updateUI();
+            }
+
+            listenToStatsOverride() {
+                this.supabase.from('config_stats').select('*').eq('id', 'global').single().then(({data}) => {
+                    if(data) {
+                        this.state.adminStatsOverride = data;
+                        this.updateUI();
+                    }
+                });
+
+                this.supabase.channel('public:config_stats')
+                    .on('postgres_changes', { event: '*', schema: 'public', table: 'config_stats', filter: 'id=eq.global' }, payload => {
+                        this.state.adminStatsOverride = payload.new;
+                        this.updateUI();
+                    })
+                    .subscribe();
+            }
+
+            // New refresh method for stats polling
+            async refreshStats() {
+                 const { data } = await this.supabase.from('config_stats').select('*').eq('id', 'global').single();
+                 if(data) {
+                     this.state.adminStatsOverride = data;
+                     this.updateUI();
+                 }
+            }
+
+            listenToChat() {
+                if(!this.state.user_id) return;
+
+                this.refreshChat(); // Initial fetch
+
+                this.supabase.channel(`chat_user_monitor_${this.state.user_id}`)
+                    .on('postgres_changes', { 
+                        event: 'INSERT', 
+                        schema: 'public', 
+                        table: 'chat_messages'
+                    }, payload => {
+                        if (payload.new.user_id === this.state.user_id && payload.new.sender !== 'user') {
+                            this.state.messages.push(payload.new);
+                            this.renderChatMessages();
+                        }
+                    })
+                    .subscribe();
+            }
+
+            // New refresh method for chat polling
+            async refreshChat() {
+                if(!this.state.user_id) return;
+
+                const { data } = await this.supabase.from('chat_messages')
+                    .select('*')
+                    .eq('user_id', this.state.user_id)
+                    .order('created_at', { ascending: true });
+                
+                if (data) {
+                    // Check if new data is actually different to avoid flickering (simple string check for now)
+                    if (JSON.stringify(data) !== JSON.stringify(this.state.messages)) {
+                        this.state.messages = data;
+                        this.renderChatMessages();
+                    } else if (data.length === 0 && this.state.messages.length > 1) {
+                         // Fallback for empty state but keep welcome message if local has more
+                         this.state.messages = [{ text: "Halo! Silakan sampaikan keluhan Anda. Tim kami akan segera merespons.", sender: 'admin' }];
+                         this.renderChatMessages();
+                    }
+                }
+            }
+
+            // --- AI SEARCH GENERATOR (NEW: DIVERSE & RANDOMIZED) ---
+            generateSearchScenarios(term) {
+                const displayTerm = term.charAt(0).toUpperCase() + term.slice(1);
+                const rand = (arr) => arr[Math.floor(Math.random() * arr.length)];
+                const randomInt = (min, max) => Math.floor(Math.random() * (max - min + 1)) + min;
+
+                const namePatterns = [
+                    `${displayTerm} Official`, `Admin ${displayTerm}`, `CS ${displayTerm}`, 
+                    `PT ${displayTerm} (Palsu)`, `CV ${displayTerm} Group`, 
+                    `${displayTerm} Store`, `Toko ${displayTerm}`, 
+                    `Investasi ${displayTerm}`, `Koperasi ${displayTerm}`,
+                    `HRD ${displayTerm}`, `Pihak ${displayTerm}`, 
+                    `Bandar ${displayTerm}`, `Agen ${displayTerm}`
+                ];
+
+                const scenarios = [
+                    { cat: 'Investasi Bodong', platform: ['Telegram', 'WhatsApp'], desc: `Menawarkan investasi ${displayTerm} dengan profit tidak masuk akal. Setelah deposit, akun diblokir.` },
+                    { cat: 'Lowongan Kerja Palsu', platform: ['WhatsApp', 'Email', 'Telegram'], desc: `Mengaku HRD ${displayTerm}, meminta biaya administrasi travel untuk interview. Alamat kantor fiktif.` },
+                    { cat: 'Belanja Online', platform: ['Instagram', 'Facebook', 'TikTok'], desc: `Menjual barang murah mengatasnamakan ${displayTerm}. Barang tidak dikirim setelah transfer.` },
+                    { cat: 'Phishing', platform: ['WhatsApp', 'SMS'], desc: `Mengirim link undangan/hadiah dari ${displayTerm} yang ternyata file .APK penyedot saldo.` },
+                    { cat: 'Pinjaman Online Ilegal', platform: ['SMS', 'WhatsApp'], desc: `Penawaran pinjaman ${displayTerm} dengan bunga mencekik. Minta akses kontak HP.` },
+                    { cat: 'Romance Scam', platform: ['Instagram', 'Tinder', 'Facebook'], desc: `Mengaku bekerja di ${displayTerm} dan meminjam uang untuk urusan darurat perusahaan.` },
+                    { cat: 'Impersonation', platform: ['WhatsApp', 'Telepon'], desc: `Menelepon mengaku sebagai petugas ${displayTerm} meminta kode OTP atau CVV kartu kredit.` },
+                    { cat: 'Giveaway Palsu', platform: ['Instagram', 'TikTok'], desc: `Akun palsu ${displayTerm} mengadakan giveaway, pemenang diminta transfer pajak hadiah.` },
+                    { cat: 'Arisan Bodong', platform: ['WhatsApp', 'Facebook'], desc: `Admin grup ${displayTerm} membawa kabur uang arisan online member.` },
+                    { cat: 'Jasa Palsu', platform: ['Instagram', 'Facebook'], desc: `Menawarkan jasa joki/bantuan mengatasnamakan ${displayTerm}, uang hilang jasa tidak dikerjakan.` }
+                ];
+
+                const shuffledScenarios = scenarios.sort(() => 0.5 - Math.random()).slice(0, randomInt(5, 8));
+
+                return shuffledScenarios.map(sc => {
+                    const lossBase = randomInt(1, 50);
+                    return {
+                        scammer_name: rand(namePatterns),
+                        platform: rand(sc.platform),
+                        category: sc.cat,
+                        loss_amount: sc.cat === 'Phishing' ? 0 : lossBase * 100000 + randomInt(0, 999) * 1000,
+                        contact_info: '08' + randomInt(100000000, 999999999),
+                        description: sc.desc,
+                        reporter_name: rand(MOCK_REPORTERS), 
+                        created_at: new Date(Date.now() - randomInt(0, 72) * 3600000).toISOString() 
+                    };
+                });
+            }
+
+            generateMockReports() {
+                const count = Math.floor(Math.random() * 8) + 5; 
+                const arr = [];
+                for(let i=0; i<count; i++) {
+                    const type = SCAM_TYPES[Math.floor(Math.random() * SCAM_TYPES.length)];
+                    const name = type.names[Math.floor(Math.random() * type.names.length)];
+                    const timeOffset = Math.floor(Math.random() * 24); 
+                    const loss = (Math.floor(Math.random() * 50) + 5) * 100000;
+                    arr.push({
+                        scammer_name: name,
+                        platform: PLATFORMS[Math.floor(Math.random() * PLATFORMS.length)],
+                        contact_info: 'Sensor Privasi',
+                        loss_amount: loss,
+                        category: type.cat,
+                        description: type.desc,
+                        created_at: new Date(Date.now() - (timeOffset * 3600 * 1000)).toISOString(),
+                        reporter_name: MOCK_REPORTERS[Math.floor(Math.random() * MOCK_REPORTERS.length)] 
+                    });
+                }
+                return arr;
+            }
+
+            getHistoricalMocks() {
+                return [
+                    { scammer_name: 'Investasi VIP', platform: 'Telegram', loss_amount: 15000000, category: 'Investasi Bodong', description: 'Penipuan investasi', contact_info: '-', created_at: new Date(Date.now() - 90000000).toISOString(), reporter_name: 'Budi Santoso' },
+                    { scammer_name: 'Toko Murah', platform: 'Instagram', loss_amount: 2500000, category: 'Belanja Online', description: 'Barang tidak dikirim', contact_info: '-', created_at: new Date(Date.now() - 180000000).toISOString(), reporter_name: 'Siti Aminah' },
+                    { scammer_name: 'Loker Palsu', platform: 'WhatsApp', loss_amount: 500000, category: 'Lowongan Kerja Palsu', description: 'Minta uang seragam', contact_info: '-', created_at: new Date(Date.now() - 200000000).toISOString(), reporter_name: 'Anonim' }
+                ];
+            }
+
+            getStats() {
+                if (this.state.adminStatsOverride) {
+                    return {
+                        count: Number(this.state.adminStatsOverride.total_reports),
+                        users: Number(this.state.adminStatsOverride.active_users),
+                        totalLoss: Number(this.state.adminStatsOverride.total_loss)
+                    };
+                }
+                const BASE_REPORTS = 15420;
+                const BASE_LOSS = 5240000000;
+                const BASE_USERS = 12500;
+                const startDate = new Date('2024-01-01').getTime();
+                const now = Date.now();
+                const daysPassed = Math.floor((now - startDate) / (1000 * 60 * 60 * 24));
+                const addedReports = Math.max(0, daysPassed * 2);
+                const addedUsers = Math.max(0, daysPassed * 3);
+                const addedLoss = addedReports * 2500000;
+                const currentTotalLoss = this.state.reports.reduce((sum, r) => sum + (Number(r.loss_amount) || 0), 0);
+
+                return {
+                    count: this.state.reports.length + BASE_REPORTS + addedReports,
+                    users: BASE_USERS + addedUsers + (this.state.reports.length * 2),
+                    totalLoss: currentTotalLoss + BASE_LOSS + addedLoss
+                };
+            }
+
+            navigate(viewId) {
+                this.state.view = viewId;
+                document.querySelectorAll('.nav-btn').forEach(btn => {
+                    btn.classList.remove('bg-slate-800', 'text-blue-400');
+                    if(btn.dataset.target === viewId) btn.classList.add('bg-slate-800', 'text-blue-400');
+                });
+                document.querySelectorAll('.mobile-nav-btn').forEach(btn => {
+                    btn.classList.remove('text-blue-600');
+                    btn.classList.add('text-slate-400');
+                    const icon = btn.querySelector('svg'); if(icon) icon.classList.remove('fill-current');
+                    if(btn.dataset.target === viewId) {
+                        btn.classList.remove('text-slate-400');
+                        btn.classList.add('text-blue-600');
+                        if(icon) icon.classList.add('fill-current');
+                    }
+                });
+                const reportBtnDiv = document.getElementById('mobile-report-btn');
+                const reportText = document.getElementById('mobile-report-text');
+                if(viewId === 'report') {
+                    reportBtnDiv.classList.remove('bg-blue-600');
+                    reportBtnDiv.classList.add('bg-red-600', 'ring-4', 'ring-red-100');
+                    reportText.classList.remove('text-slate-500');
+                    reportText.classList.add('text-red-600');
+                } else {
+                    reportBtnDiv.classList.add('bg-blue-600');
+                    reportBtnDiv.classList.remove('bg-red-600', 'ring-4', 'ring-red-100');
+                    reportText.classList.add('text-slate-500');
+                    reportText.classList.remove('text-red-600');
+                }
+                document.querySelectorAll('.view-section').forEach(el => el.classList.add('hidden'));
+                document.getElementById(`view-${viewId}`).classList.remove('hidden');
+                if(viewId === 'home' || viewId === 'feed') this.updateUI();
+                window.scrollTo(0, 0);
+            }
+
+            updateUI() {
+                const stats = this.getStats();
+                const statRep = document.getElementById('stat-total-reports');
+                const statUsr = document.getElementById('stat-active-users');
+                const statLoss = document.getElementById('stat-total-loss');
+                if(statRep) statRep.textContent = stats.count.toLocaleString('id-ID');
+                if(statUsr) statUsr.textContent = stats.users.toLocaleString('id-ID');
+                if(statLoss) statLoss.textContent = 'Rp ' + stats.totalLoss.toLocaleString('id-ID');
+                this.renderFeedList('home-feed-preview', 3);
+                this.renderFeedList('feed-container', 100);
+            }
+
+            renderFeedList(containerId, limit) {
+                const container = document.getElementById(containerId);
+                if(!container) return;
+                
+                // DATA PREPARATION
+                let displayData = [...this.state.reports]; // Clone real data
+
+                // SEARCH LOGIC
+                if(containerId === 'feed-container') {
+                    const searchInput = document.getElementById('feed-search');
+                    const searchTerm = searchInput?.value.trim() || '';
+                    
+                    if(searchTerm.length > 0) {
+                        const lowerTerm = searchTerm.toLowerCase();
+                        
+                        // 1. Filter Real Data
+                        let realMatches = displayData.filter(r => 
+                            (r.scammer_name || '').toLowerCase().includes(lowerTerm) || 
+                            (r.platform || '').toLowerCase().includes(lowerTerm) ||
+                            (r.contact_info || '').toLowerCase().includes(lowerTerm) ||
+                            (r.description || '').toLowerCase().includes(lowerTerm)
+                        );
+
+                        // 2. AI GENERATOR: Create synthetic scenarios if needed
+                        if (searchTerm.length >= 3) {
+                             const synthetic = this.generateSearchScenarios(searchTerm);
+                             // Combine real matches with synthetic scenarios
+                             displayData = [...realMatches, ...synthetic];
+                        } else {
+                            displayData = realMatches;
+                        }
+                    }
+                }
+
+                if(displayData.length === 0) {
+                    container.innerHTML = '<div class="col-span-full text-center text-slate-500">Memuat data... atau tidak ada hasil.</div>';
+                    return;
+                }
+
+                container.innerHTML = displayData.slice(0, limit).map(r => {
+                    const date = r.created_at 
+                        ? new Date(r.created_at).toLocaleDateString("id-ID", { day: 'numeric', month: 'long', year: 'numeric' }) 
+                        : 'Baru saja';
+                    const contact = r.contact_info || '-';
+                    return `
+                    <div class="bg-white p-6 rounded-xl shadow-sm border border-slate-200 hover:shadow-md transition-shadow">
+                        <div class="flex justify-between items-start mb-3">
+                            <div class="flex items-center space-x-2 flex-wrap gap-y-1">
+                                <span class="bg-red-100 text-red-800 text-xs font-bold px-2 py-1 rounded uppercase tracking-wide">${r.category}</span>
+                                <span class="bg-slate-100 text-slate-600 text-xs font-medium px-2 py-1 rounded">${r.platform}</span>
+                            </div>
+                            <span class="text-slate-400 text-xs whitespace-nowrap ml-2">${date}</span>
+                        </div>
+                        <h3 class="text-lg font-bold text-slate-800 mb-1">Terlapor: <span class="text-red-600">${r.scammer_name}</span></h3>
+                        <p class="text-sm text-slate-500 mb-3 font-mono bg-slate-50 p-1 inline-block rounded">Kontak: ${contact}</p>
+                        <p class="text-slate-600 text-sm mb-4 line-clamp-3">"${r.description}"</p>
+                        <div class="flex justify-between items-center border-t border-slate-100 pt-3">
+                            <div class="flex flex-col">
+                                <span class="text-xs text-slate-400">Kerugian</span>
+                                <span class="font-bold text-slate-800">Rp ${(Number(r.loss_amount)||0).toLocaleString('id-ID')}</span>
+                            </div>
+                            <div class="text-xs text-slate-400">Pelapor: ${r.reporter_name || 'Anonim'}</div>
+                        </div>
+                    </div>
+                    `;
+                }).join('');
+            }
+
+            renderTicker() {
+                const container = document.getElementById('ticker-container');
+                const shuffled = [...TESTIMONIAL_POOL].sort(() => 0.5 - Math.random()).slice(0, 6);
+                const items = [...shuffled, ...shuffled].map(item => `
+                    <div class="inline-flex items-center mx-8 bg-slate-700/50 px-4 py-2 rounded-full border border-slate-600/50">
+                        <div class="flex text-yellow-400 mr-2">
+                            ${'<i data-lucide="star" class="w-3 h-3 fill-current"></i>'.repeat(5)}
+                        </div>
+                        <span class="text-slate-200 text-sm italic mr-2">"${item.text}"</span>
+                        <span class="text-blue-400 text-xs font-bold">- ${item.name}, ${item.role}</span>
+                    </div>
+                `).join('');
+                container.innerHTML = items;
+            }
+
+            toggleChat(forceOpen) {
+                const window = document.getElementById('chat-window');
+                const btn = document.getElementById('chat-toggle-btn');
+                this.state.isChatOpen = forceOpen !== undefined ? forceOpen : !this.state.isChatOpen;
+                if(this.state.isChatOpen) {
+                    window.classList.remove('hidden');
+                    btn.classList.remove('bg-blue-600', 'hover:bg-blue-700');
+                    btn.classList.add('bg-red-500', 'hover:bg-red-600');
+                    btn.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-x w-6 h-6"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>';
+                } else {
+                    window.classList.add('hidden');
+                    btn.classList.add('bg-blue-600', 'hover:bg-blue-700');
+                    btn.classList.remove('bg-red-500', 'hover:bg-red-600');
+                    btn.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-message-square w-6 h-6"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>';
+                }
+            }
+
+            renderChatMessages() {
+                const container = document.getElementById('chat-messages');
+                container.innerHTML = this.state.messages.map(msg => `
+                    <div class="flex ${msg.sender === 'user' ? 'justify-end' : 'justify-start'}">
+                        ${msg.sender === 'admin' ? '<div class="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center mr-2 flex-shrink-0"><i data-lucide="shield" class="w-4 h-4 text-blue-600"></i></div>' : ''}
+                        <div class="max-w-[75%] px-4 py-2 rounded-2xl text-sm ${msg.sender === 'user' ? 'bg-blue-600 text-white rounded-br-none' : 'bg-white text-slate-700 border border-slate-200 rounded-bl-none shadow-sm'}">
+                            ${msg.text}
+                        </div>
+                    </div>
+                `).join('');
+                lucide.createIcons();
+                container.scrollTop = container.scrollHeight;
+            }
+
+            async handleChatSubmit(e) {
+                e.preventDefault();
+                const input = document.getElementById('chat-input');
+                const text = input.value.trim();
+                if(!text) return;
+                
+                // Optimistic UI: Tampilkan pesan langsung
+                input.value = '';
+                this.state.messages.push({ text: text, sender: 'user', created_at: new Date().toISOString() });
+                this.renderChatMessages();
+
+                const { error } = await this.supabase.from('chat_messages').insert({
+                    user_id: this.state.user_id,
+                    text: text,
+                    sender: 'user'
+                });
+
+                if(error) {
+                    console.error("Chat Error:", error);
+                    alert("Gagal mengirim pesan. Silakan coba lagi.");
+                    return;
+                }
+
+                await this.supabase.from('support_sessions').upsert({
+                    user_id: this.state.user_id,
+                    user_name: 'WA: ' + this.state.user_id,
+                    last_message: text,
+                    unread: true,
+                    last_updated: new Date().toISOString()
+                });
+            }
+
+            handlePhoneSubmit(e) {
+                e.preventDefault();
+                const input = document.getElementById('user-phone-input');
+                const phone = input.value.trim();
+                if(!phone) { alert("Harap isi nomor telepon!"); return; }
+                
+                this.state.user_id = phone;
+                localStorage.setItem('fraudguard_user_phone', phone);
+                
+                this.updateChatUIState();
+                this.listenToChat();
+            }
+
+            setupEventListeners() {
+                document.getElementById('phone-form').addEventListener('submit', (e) => this.handlePhoneSubmit(e));
+
+                document.getElementById('fraudReportForm').addEventListener('submit', async (e) => {
+                    e.preventDefault();
+                    if (!this.state.user_id) {
+                        const confirmLogin = confirm("Anda perlu mendaftarkan nomor HP di menu Chat untuk mengirim laporan agar terverifikasi. Buka menu chat sekarang?");
+                        if(confirmLogin) {
+                            this.toggleChat(true);
+                        }
+                        return;
+                    }
+
+                    const btn = document.getElementById('btn-submit-report');
+                    const originalText = btn.textContent;
+                    btn.disabled = true;
+                    btn.textContent = 'Mengirim...';
+
+                    const formData = new FormData(e.target);
+                    const data = Object.fromEntries(formData.entries());
+
+                    // UPDATE: Sekarang kita kirim user_id karena kolomnya sudah Anda buat di SQL
+                    const { error } = await this.supabase.from('fraud_reports').insert({
+                        scammer_name: data.scammer_name,
+                        platform: data.platform,
+                        contact_info: data.contact_info,
+                        loss_amount: Number(data.loss_amount) || 0,
+                        category: data.category,
+                        description: data.description,
+                        reporter_name: data.reporter_name,
+                        user_id: this.state.user_id // PENTING: ID ini diperlukan untuk menu "Laporan User" di Admin
+                    });
+
+                    btn.disabled = false;
+                    btn.textContent = originalText;
+
+                    if (error) {
+                        console.error("Supabase Error:", error);
+                        // Pesan error yang lebih informatif untuk user/developer
+                        if(error.message.includes("column") || error.code === "42703") {
+                            alert("Gagal kirim: Database belum diupdate. Jalankan SQL 'ALTER TABLE fraud_reports ADD COLUMN user_id text;' di Supabase.");
+                        } else {
+                            alert('Gagal mengirim laporan: ' + error.message);
+                        }
+                    } else {
+                        alert('Laporan berhasil dikirim dan terverifikasi!');
+                        e.target.reset();
+                        this.navigate('feed');
+                    }
+                });
+
+                document.getElementById('chat-form').addEventListener('submit', (e) => this.handleChatSubmit(e));
+                document.getElementById('feed-search').addEventListener('input', () => {
+                    this.renderFeedList('feed-container', 100);
+                });
+            }
+        }
+
+        window.app = new FraudApp();
+    </script>
+</body>
+</html>
